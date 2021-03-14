@@ -76,7 +76,7 @@
                                                 <th>Tempat</th>
                                                 <th>Mulai</th>
                                                 <th>Selesai</th>
-                                                <th>Tabrakan</th>
+                                                <th>Bentrok</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -89,11 +89,9 @@
                                                 <td>{{ d.start.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
                                                 <td>{{ d.end.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
                                                 <td>
-                                                    {% if d.crash == true %}
-                                                    <span class="badge badge-danger badge-pill">Ya</span>
-                                                    {% else %}
-                                                    <span class="badge badge-info badge-pill">Tidak</span>
-                                                    {% endif %}
+                                                    {% for i in d.crash_with() %}
+                                                        {{ i.description }}<br/>
+                                                    {% endfor %}
                                                 </td>
                                                 <td>
                                                     <form action="{{ url_for('edit', mode=2, id=d.id)}}" method="POST">
@@ -116,7 +114,7 @@
                                                 <th>Tempat</th>
                                                 <th>Mulai</th>
                                                 <th>Selesai</th>
-                                                <th>Tabrakan</th>
+                                                <th>Bentrok</th>
                                                 <th>Action</th>
                                             </tr>
                                         </tfoot>

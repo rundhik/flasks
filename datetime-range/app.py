@@ -17,6 +17,32 @@ apl.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(apl)
 
 
+### Consruct ###
+
+def min_diff(start, end):
+    """Cek selisih waktu dalam menit. Jika menerapakan pada struktur
+    aplikasi 'factory', masukkan ke dalam file Models."""
+
+    diff = (end - start).total_seconds() / 60
+    return diff
+
+
+def time_crash(x_start, x_end, y_start, y_end):
+    """Memeriksa jenis-jenis bentrok waktu. Jika menerapakan pada struktur
+    aplikasi 'factory', masukkan ke dalam file Models."""
+
+    if ( (x_start > y_start) and (x_start < y_end) and (min_diff(x_start, y_end) >= 0) ) :
+        return True
+    elif ( (x_end > y_start) and (x_end < y_end) and (min_diff(y_start, x_end) >= 0) ) :
+        return True
+    elif ( (x_start >= y_start) and (x_start < y_end) and (x_end > y_start) and (x_end <= y_end) ) :
+        return True
+    elif ( (x_start <= y_start) and (x_start < y_end) and (x_end > y_start) and (x_end >= y_end) ) :
+        return True
+    else :
+        return False
+
+
 #### Models ####
 
 class DateTimeRange(db.Model):
@@ -30,9 +56,50 @@ class DateTimeRange(db.Model):
     end = db.Column('end', db.DateTime())
 
     def __repr__(self):
-        return "Kegiatan :{}, Lokasi:{}, Mulai:{}, Selesai:{}".format(
-            self.description,self.location, self.start, self.end
+        return "(Kegiatan :{}({}), Lokasi:{}, Mulai:{}, Selesai:{})".format(
+            self.description, self.id, self.location, self.start, self.end
         )
+
+    def start_end_day(self):
+        """Menentukan jam awal dan jam akhir dari hari.
+        Efisiensi penyaringan kueri."""
+
+        start = self.start.replace(hour=0,minute=0,second=0)
+        end = self.start.replace(hour=23,minute=59,second=59)
+        return start, end
+
+    def crash_with(self):
+        """Mengecek semua kegiatan berpotensi bentrok di hari yang sama"""
+
+        query = DateTimeRange.query.filter( (DateTimeRange.location == self.location) \
+            & (DateTimeRange.start > self.start_end_day()[0]) & \
+            (DateTimeRange.end< self.start_end_day()[1]) ).order_by( DateTimeRange.start.asc() ).all()
+        
+        """Eliminasi obyek diri sendiri"""
+        cleaning = []
+        for i in query:
+            if ( self.id != i.id ):
+                cleaning.append(i)
+
+        crash_item = []
+        for j in cleaning:
+            if ( time_crash(self.start, self.end, j.start, j.end) == True ):
+                crash_item.append(j)
+
+        return crash_item
+
+    def has_crash(self):
+        """Memeriksa kegiatan dari terjadinya bentrok. Memberikan status
+        bentrok menjadi True """
+
+        if len(self.crash_with()) > 0:
+            self.crash = True
+            db.session.commit()
+            return True
+        else :
+            self.crash = False
+            db.session.commit()
+            return False
 
 
 #### Forms ####
@@ -66,6 +133,14 @@ from flask import (
 @apl.route('/')
 def index():
     data = DateTimeRange.query.order_by(DateTimeRange.start.asc()).all()
+
+    # memaksa update status bentrok setiap mengakses daftar data
+    # hal ini mengakibatkan proses pemuatan data yang lama
+    # untuk efisiensi bisa dikembangkan dengan penyaringan kueri
+    # dengan rentang waktu tertentu
+    for i in data:
+        i.has_crash()
+
     formulir = DateRangeFormulir()
     return render_template('datetime-range/index.html', data=data, formulir=formulir)
 
@@ -83,30 +158,12 @@ def edit(mode, id):
     formulir.location.choices = location_choice
 
     def custom_form_validation():
-        # karena bootstrap daterangepicker tidak dapat divalidasi dari backend
-        # maka harus mengalah memvalidasi satu persatu form2 selain daterangepicker
-        # so sick :'(
+        """karena bootstrap daterangepicker tidak dapat divalidasi
+        dari backend maka harus mengalah dengan memvalidasi satu persatu
+        form-form selain daterangepicker. So sick :'( """
+
         formulir.description.validate(formulir.description)
         formulir.location.validate(formulir.location)
-
-    def check_crash(obyek):
-        for i in DateTimeRange.query.filter( (DateTimeRange.location==obyek.location) & \
-            (DateTimeRange.start > datetime.date.today()) ).order_by(DateTimeRange.start.asc()).all():
-            if (obyek.start.day == i.start.day and obyek.start.year == i.start.year):
-                if ( obyek.id != i.id ):
-                    if (obyek.start.hour >= i.start.hour and obyek.start.hour <= i.end.hour ) or \
-                        (obyek.end.hour >= i.start.hour and obyek.end.hour <= i.end.hour):
-                        flash('Jadwal kegiatan berpotensi tabrakan dengan \
-                            <a class="badge badge-danger" href="'+ url_for('edit', mode=1, id=i.id) +\
-                            '">' + i.description + '</a><br/> Jika ingin memperbaiki jadwal, \
-                            klik <a class="badge badge-primary" href="'+ url_for('edit', mode=1, id=obyek.id) + \
-                            '">di sini</a>', category='warning')
-                        return True
-                        break
-                    else:
-                        return False
-                else:
-                    pass
 
 
     if mode == 0 : # mode create
@@ -118,14 +175,20 @@ def edit(mode, id):
             data.location = formulir.location.data
             data.start = datetime.datetime.strptime(formulir.start.data, '%Y-%m-%d %H:%M')
             data.end = datetime.datetime.strptime(formulir.end.data, '%Y-%m-%d %H:%M')
-            data.crash = check_crash(data)
             db.session.add(data)
             db.session.commit()
 
             # UX info
+            if data.has_crash() == True :
+                for i in data.crash_with():
+                    flash('Jadwal kegiatan berpotensi tabrakan dengan \
+                        <a class="badge badge-danger" href="'+ url_for('edit', mode=1, id=i.id) +\
+                        '">' + i.description + '</a><br/> Jika ingin memperbaiki jadwal, \
+                        klik <a class="badge badge-primary" href="'+ url_for('edit', mode=1, id=data.id) + \
+                        '">di sini</a>', category='warning')
             flash('Jadwal kegiatan berhasil ditambahkan.', category='sukses')
             return redirect( url_for('index') )
-            # return str(check_crash(data))
+
 
     elif mode == 1 : # mode edit
         data = DateTimeRange.query.get_or_404(id)
@@ -141,10 +204,8 @@ def edit(mode, id):
 
             # antisipasi bug daterangepicker ketika tidak terjadi perubahan
             if ( formulir.start.data == data.start.strftime('%A, %d/%B/%y %H:%M') ):
-                # formulir.start.data = data.start
                 formulir.start.data = datetime.datetime.strftime(data.start, '%Y-%m-%d %H:%M')
             if ( formulir.end.data == data.end.strftime('%A, %d/%B/%y %H:%M') ):
-                # formulir.end.data = data.end
                 formulir.end.data = datetime.datetime.strftime(data.end, '%Y-%m-%d %H:%M')
 
             # updating database
@@ -152,10 +213,16 @@ def edit(mode, id):
             data.location = formulir.location.data
             data.start = datetime.datetime.strptime(formulir.start.data, '%Y-%m-%d %H:%M')
             data.end = datetime.datetime.strptime(formulir.end.data, '%Y-%m-%d %H:%M')
-            data.crash = check_crash(data)
             db.session.commit()
 
             # UX info
+            if data.has_crash() == True :
+                for i in data.crash_with():
+                    flash('Jadwal kegiatan berpotensi tabrakan dengan \
+                        <a class="badge badge-danger" href="'+ url_for('edit', mode=1, id=i.id) +\
+                        '">' + i.description + '</a><br/> Jika ingin memperbaiki jadwal, \
+                        klik <a class="badge badge-primary" href="'+ url_for('edit', mode=1, id=data.id) + \
+                        '">di sini</a>', category='warning')
             flash('Jadwal kegiatan berhasil diubah.', category='sukses')
 
             return redirect( url_for('index') )
