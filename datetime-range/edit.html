@@ -1,0 +1,151 @@
+{% set title = 'Edit Date Time Range' %}
+
+{% extends 'base.html' %}
+
+<!-- Vendors CSS Letakkan di sini -->
+{% block css %}
+
+    <!-- Daterangepicker CSS -->
+    <link href="{{ url_for('static', filename='vendors/daterangepicker/daterangepicker.css') }}" rel="stylesheet" type="text/css" />
+
+{% endblock %}
+
+<!-- Konten Halaman Letakkan di sini -->
+{% block content %}
+
+    <!-- Container -->
+
+    <div class="container-fluid mt-xl-50 mt-sm-30 mt-15">
+
+        {% block flash_messages %}
+            {%- with messages = get_flashed_messages(with_categories=true) -%}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category=='error' %}
+                            {% set category='danger' %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% elif category=='sukses' %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% elif category=='warning' %}
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {%- endwith %}
+        {% endblock %}
+
+        <!-- Row -->
+        <div class="row">
+            <div class="col-xl-12">
+                <section class="hk-sec-wrapper">
+                    <h5 class="hk-sec-title">Penjadwalan Kegiatan</h5>
+                    <p class="mb-40">Silahkan menentukan jadwal kegiatan dengan mengisi deskripsi kegiatan. Selanjutnya pilih tanggal kegiatan mulai dan selesai. Ketika memilih tanggal jangan lupa klik 'Apply'. Pastikan tanggal yang ditentukan telah sesuai.</p>
+                    <form class="col-sm" action="" method="POST">
+                        {{ formulir.csrf }}
+                        <div class="col-12">
+                            <h6 class="mt-30 mb-20">{{ formulir.description.label }}</h6>
+                            {{ formulir.description(class='form-control')}}
+                        </div>
+                        <div class="col-12">
+                            <h6 class="mt-30 mb-20">{{ formulir.location.label }}</h6>
+                            {{ formulir.location(class='form-control')}}
+                        </div>
+                        <div class="col-12">
+                            <h6 class="mt-30 mb-20">Pilih Tanggal Mulai dan Tanggal Selesai</h6>
+                            <input class="form-control" type="text" name="daterangetimes"/>
+                            <small class="form-text text-muted">
+                                Pastikan klik tombol <strong>Apply</strong> setelah memilih waktu mulai atau waktu selesai.
+                            </small>
+                            {{ formulir.start(class='form-control')}}
+                            {{ formulir.end(class='form-control')}}
+                        </div>
+                        <div class="col-12">
+                            <h6>&nbsp;</h6>
+                            {{ formulir.simpan(class='btn btn-success btn-sm') }}
+                            <a href="{{ url_for('index') }}" class="btn btn-danger btn-sm" data-toggle="tooltip" data-original-title="Kembali">Batal</a>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+        <!-- /Row -->
+
+    </div>
+    <!-- /Container -->
+
+{% endblock %}
+
+
+<!-- Vendors JavaScript Letakkan di sini -->
+{% block javascript %}
+
+    <!-- Daterangepicker JavaScript -->
+    <script src="{{ url_for('static', filename='vendors/moment/min/moment.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendors/daterangepicker/daterangepicker.js') }}"></script>
+
+    <!-- Biar match sama localize Indonesia pada controller -->
+    <script src="{{ url_for('static', filename='vendors/moment/locale/id.js') }}"></script>
+
+    <!-- Inisiasi Daterangepicker -->
+    <script type="text/javascript">
+        $(function() {
+            tglmulai = '{{ formulir.start.default }}';
+            tglselesai = '{{ formulir.end.default }}';
+
+            // Menangani mode create karena tanggal masih zhonk
+            if (tglmulai == 'None'){
+                tglmulai = moment().startOf('hour');
+            }
+            if (tglselesai == 'None'){
+                tglselesai = moment().endOf('hour');
+            }
+            // ----
+
+            $('input[name="daterangetimes"]').daterangepicker(
+                {
+                timePicker: true,
+                startDate: tglmulai,
+                endDate: tglselesai,
+                "cancelClass": "btn-secondary",
+                locale: {
+                    // pakai localize Indonesia menyesuaikan output dari controller
+                    format: 'dddd, DD/MMM/YYYY, [Jam] hh:mm A',
+                    // Opsi lainnya :
+                    //format: 'DD-MMM-YYYY HH:mm'
+                    //format: 'dddd, DD-MMM-YYYY [jam] HH.mm'
+                    //format: moment.localeData('id').longDateFormat('LLLL')
+                }
+            },
+                function(mulai, selesai) {
+                    console.log("A new date selection was made: ");
+                    $('#daterangetimes').html(mulai.format('YYYY-MM-DD HH:MM') + ' - ' + selesai.format('YYYY-MM-DD HH:MM'));
+                    $('#start').val(mulai.format('YYYY-MM-DD HH:mm'));
+                    $('#end').val(selesai.format('YYYY-MM-DD HH:mm'))
+                }
+            );
+        });
+    </script>
+
+{% endblock %}

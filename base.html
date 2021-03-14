@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block head %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Aplikasi Penjadwalan Kegiatan Kanwil Kemenkumham Jawa Barat" />
+    <title>{{ title }}</title>
+
+    <!-- Favicon -->
+    <!-- <link rel="shortcut icon" href="favicon.ico"> -->
+    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
+
+    <!-- Toggles CSS -->
+    <link href="{{ url_for('static', filename='vendors/jquery-toggles/css/toggles.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='vendors/jquery-toggles/css/themes/toggles-light.css') }}" rel="stylesheet" type="text/css">
+
+    <!-- Toastr CSS -->
+    <link href="{{ url_for('static', filename='vendors/jquery-toast-plugin/dist/jquery.toast.min.css') }}" rel="stylesheet" type="text/css">
+
+    <!-- Vendors CSS -->
+    {% block css %} {% endblock %}
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
+
+    {% endblock %}
+</head>
+
+<body>
+    <!-- HK Wrapper -->
+    <div class="hk-wrapper hk-vertical-nav">
+
+    {% include 'navigation.html' %}
+
+        <!-- Main Content -->
+        <div class="hk-pg-wrapper">
+
+            {% block content %} {% endblock %}
+
+            <!-- Footer -->
+            <div class="hk-footer-wrap container-fluid">
+                <footer class="footer">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12">
+                            <p>Customized by :<a href="https://jabar.kemenkumham.go.id/" class="text-dark" target="_blank">Kanwil Jabar</a> © 2021</p>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <p class="d-inline-block">Follow us</p>
+                            <a href="#" class="d-inline-block btn btn-icon btn-icon-only btn-indigo btn-icon-style-4"><span class="btn-icon-wrap"><i class="fa fa-facebook"></i></span></a>
+                            <a href="#" class="d-inline-block btn btn-icon btn-icon-only btn-indigo btn-icon-style-4"><span class="btn-icon-wrap"><i class="fa fa-twitter"></i></span></a>
+                            <a href="#" class="d-inline-block btn btn-icon btn-icon-only btn-indigo btn-icon-style-4"><span class="btn-icon-wrap"><i class="fa fa-google-plus"></i></span></a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+            <!-- /Footer -->
+        </div>
+        <!-- /Main Content -->
+
+    </div>
+    <!-- /HK Wrapper -->
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='vendors/jquery/dist/jquery.min.js') }}"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ url_for('static', filename='vendors/popper.js/dist/umd/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendors/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+    <!-- Slimscroll JavaScript -->
+    <script src="{{ url_for('static', filename='js/jquery.slimscroll.js') }}"></script>
+
+    <!-- Fancy Dropdown JS -->
+    <script src="{{ url_for('static', filename='js/dropdown-bootstrap-extended.js') }}"></script>
+
+    <!-- FeatherIcons JavaScript -->
+    <script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+
+    <!-- Toggles JavaScript -->
+    <script src="{{ url_for('static', filename='vendors/jquery-toggles/toggles.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toggle-data.js') }}"></script>
+
+    <!-- Vendors JavaScript -->
+
+    {% block javascript %} {% endblock%}
+
+    <!-- Init JavaScript -->
+    <script src="{{ url_for('static', filename='js/init.js') }}"></script>
+	
+</body>
+
+</html>

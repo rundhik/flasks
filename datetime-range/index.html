@@ -1,0 +1,177 @@
+{% set title = 'Date Time Range' %}
+
+{% extends 'base.html' %}
+
+<!-- Vendors CSS Letakkan di sini -->
+{% block css %}
+
+    <!-- Data Table CSS -->
+    <link href="{{ url_for('static', filename='vendors/datatables.net-dt/css/jquery.dataTables.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='vendors/datatables.net-responsive-dt/css/responsive.dataTables.min.css') }}" rel="stylesheet" type="text/css" />
+
+{% endblock %}
+
+<!-- Konten Halaman Letakkan di sini -->
+{% block content %}
+
+    <!-- Container -->
+
+    <div class="container-fluid mt-xl-50 mt-sm-30 mt-15">
+        {% block flash_messages %}
+            {%- with messages = get_flashed_messages(with_categories=true) -%}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category=='error' %}
+                            {% set category='danger' %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% elif category=='sukses' %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% elif category=='warning' %}
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                {{ message|safe }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {%- endwith %}
+        {% endblock %}
+
+        <!-- Row -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="hk-row">
+                    <section class="hk-sec-wrapper col-xl-12">
+                        <h5 class="hk-sec-title">Daftar Kegiatan</h5>
+                        <p class="mb-40">
+                            <a href="{{ url_for('edit', mode=0 )}}" class="btn btn-primary btn-wth-icon icon-left btn-sm"><i class="icon-plus"></i> Tambah</a>
+                        </p>
+                        <div class="row">
+                            <div class="col-sm">
+                                <div class="table-wrap">
+                                    <table id="ayas_table" class="table table-striped w-100">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Deskripsi</th>
+                                                <th>Tempat</th>
+                                                <th>Mulai</th>
+                                                <th>Selesai</th>
+                                                <th>Tabrakan</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for d in data %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td>{{ d.description }}</td>
+                                                <td>{{ d.location }}</td>
+                                                <td>{{ d.start.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
+                                                <td>{{ d.end.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
+                                                <td>
+                                                    {% if d.crash == true %}
+                                                    <span class="badge badge-danger badge-pill">Ya</span>
+                                                    {% else %}
+                                                    <span class="badge badge-info badge-pill">Tidak</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <form action="{{ url_for('edit', mode=2, id=d.id)}}" method="POST">
+                                                    {{ formulir.csrf }}
+                                                        <a href="{{ url_for('edit', mode=1, id=d.id) }}" class="btn btn-icon btn-icon-circle btn-light btn-sm btn-style-2" data-toggle="tooltip" data-original-title="Edit">
+                                                            <span class="btn-icon-wrap">
+                                                                <i class="icon-pencil"></i>
+                                                            </span>
+                                                        </a>
+                                                        <button type="submit" class="btn btn-icon btn-icon-circle btn-light btn-sm btn-style-2" name="simpan" data-toggle="tooltip" data-original-title="Hapus"><span class="btn-icon-wrap"><i class="icon-trash"></i></span></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Deskripsi</th>
+                                                <th>Tempat</th>
+                                                <th>Mulai</th>
+                                                <th>Selesai</th>
+                                                <th>Tabrakan</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>	
+            </div>
+        </div>
+        <!-- /Row -->
+
+    </div>
+        <!-- /Container -->
+
+{% endblock %}
+
+
+<!-- Vendors JavaScript Letakkan di sini -->
+{% block javascript %}
+
+        <script src="{{ url_for('static', filename='vendors/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-dt/js/dataTables.dataTables.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-buttons-bs4/js/buttons.bootstrap4.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.flash.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/jszip/dist/jszip.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/pdfmake/build/pdfmake.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/pdfmake/build/vfs_fonts.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendors/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
+
+        <!-- Inisiasi Datatable -->
+        <script>
+            $('#ayas_table').DataTable({
+                "responsive" : true,
+                "autoWidth" : false,
+                "bPaginate" : true,
+                // "dom": "Bfrtip",
+                // "buttons" : [ "copy", "csv", "excel", "pdf", "print" ],
+                "language": {
+                    "search" : "",
+                    "sSearchPlaceholder": " Cari ",
+                    "sInfoFiltered": "(pencarian dari _MAX_ total data)",
+                    "sZeroRecords": "Data tidak ditemukan",
+                    "sInfoEmpty": "Menampilkan 0 baris",
+                    "sLengthMenu": "Menampilkan _MENU_ baris",
+                    "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ baris",
+                    "paginate": { "previous": "<i class='icon-arrow-left'></i>", "next": "<i class='icon-arrow-right'></i>" },
+                    "info": "Menampilkan halaman _PAGE_ dari _PAGES_"
+                },
+            });
+        </script>
+
+{% endblock %}
