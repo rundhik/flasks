@@ -62,6 +62,20 @@
                 <section class="hk-sec-wrapper">
                     <h5 class="hk-sec-title">Penjadwalan Kegiatan</h5>
                     <p class="mb-40">Silahkan menentukan jadwal kegiatan dengan mengisi deskripsi kegiatan. Selanjutnya pilih tanggal kegiatan mulai dan selesai. Ketika memilih tanggal jangan lupa klik 'Apply'. Pastikan tanggal yang ditentukan telah sesuai.</p>
+                    {% if mode == 1 %}
+                    {% set range = 365 %}
+                        {% if data.has_crash(range,range) ==  True %}
+                            <p>
+                            <div class="alert alert-warning" role="alert">
+                                <h4 class="alert-heading mb-5">Perhatian!</h4>
+                                <strong>Jadwal kegiatan berpotensi bentrok dengan : </strong>
+                                {% for i in data.crash_with(range,range) %}
+                                <a class="badge badge-danger" href="{{ url_for('edit', mode=1, id=i.id) }}"> {{ i.description }} </a> 
+                                {% endfor %}
+                            </div>
+                            </p>
+                        {% endif %}
+                    {% endif %}
                     <form class="col-sm" action="" method="POST">
                         {{ formulir.csrf }}
                         <div class="col-12">

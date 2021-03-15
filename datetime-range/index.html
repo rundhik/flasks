@@ -89,7 +89,7 @@
                                                 <td>{{ d.start.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
                                                 <td>{{ d.end.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
                                                 <td>
-                                                    {% for i in d.crash_with() %}
+                                                    {% for i in d.crash_with(start,end) %}
                                                         {{ i.description }}<br/>
                                                     {% endfor %}
                                                 </td>

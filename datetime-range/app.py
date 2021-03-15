@@ -60,21 +60,20 @@ class DateTimeRange(db.Model):
             self.description, self.id, self.location, self.start, self.end
         )
 
-    def start_end_day(self):
+    def start_end_day(self, back=0, forward=0):
         """Menentukan jam awal dan jam akhir dari hari.
         Efisiensi penyaringan kueri."""
 
-        start = self.start.replace(hour=0,minute=0,second=0)
-        end = self.start.replace(hour=23,minute=59,second=59)
+        start = self.start.replace(hour=0,minute=0,second=0) - datetime.timedelta(days=back)
+        end = self.start.replace(hour=23,minute=59,second=59) + datetime.timedelta(days=forward)
         return start, end
 
-    def crash_with(self):
+    def crash_with(self, start=0, end=0):
         """Mengecek semua kegiatan berpotensi bentrok di hari yang sama"""
 
         query = DateTimeRange.query.filter( (DateTimeRange.location == self.location) \
-            & (DateTimeRange.start > self.start_end_day()[0]) & \
-            (DateTimeRange.end< self.start_end_day()[1]) ).order_by( DateTimeRange.start.asc() ).all()
-        
+            & (DateTimeRange.start > self.start_end_day(start,end)[0]) & \
+            (DateTimeRange.end < self.start_end_day(start,end)[1]) ).order_by( DateTimeRange.start.asc() ).all()
         """Eliminasi obyek diri sendiri"""
         cleaning = []
         for i in query:
@@ -88,11 +87,11 @@ class DateTimeRange(db.Model):
 
         return crash_item
 
-    def has_crash(self):
+    def has_crash(self, start=0, end=0):
         """Memeriksa kegiatan dari terjadinya bentrok. Memberikan status
         bentrok menjadi True """
 
-        if len(self.crash_with()) > 0:
+        if len(self.crash_with(start, end)) > 0:
             self.crash = True
             db.session.commit()
             return True
@@ -130,8 +129,8 @@ from flask import (
     request, render_template, flash, redirect, url_for, jsonify,
 )
 
-@apl.route('/')
-def index():
+@apl.route('/', defaults={'start':365, 'end':365})
+def index(start,end):
     data = DateTimeRange.query.order_by(DateTimeRange.start.asc()).all()
 
     # memaksa update status bentrok setiap mengakses daftar data
@@ -139,10 +138,16 @@ def index():
     # untuk efisiensi bisa dikembangkan dengan penyaringan kueri
     # dengan rentang waktu tertentu
     for i in data:
-        i.has_crash()
+        i.has_crash(start,end)
 
     formulir = DateRangeFormulir()
-    return render_template('datetime-range/index.html', data=data, formulir=formulir)
+    return render_template(
+        'datetime-range/index.html',
+        data=data,
+        start=start,
+        end=end,
+        formulir=formulir
+    )
 
 @apl.route('/edit/data/', defaults={'mode': 0, 'id': 0}, methods=['GET', 'POST'])
 @apl.route('/edit/<int:mode>/data/<int:id>/', methods=['GET', 'POST'])
@@ -181,7 +186,7 @@ def edit(mode, id):
             # UX info
             if data.has_crash() == True :
                 for i in data.crash_with():
-                    flash('Jadwal kegiatan berpotensi tabrakan dengan \
+                    flash('Jadwal kegiatan berpotensi bentrok dengan \
                         <a class="badge badge-danger" href="'+ url_for('edit', mode=1, id=i.id) +\
                         '">' + i.description + '</a><br/> Jika ingin memperbaiki jadwal, \
                         klik <a class="badge badge-primary" href="'+ url_for('edit', mode=1, id=data.id) + \
@@ -241,7 +246,7 @@ def edit(mode, id):
     # render form
     formulir.process()
 
-    return render_template('datetime-range/edit.html', formulir=formulir)
+    return render_template('datetime-range/edit.html', formulir=formulir, mode=mode, data=data)
 
 
 #### Customizing ####
