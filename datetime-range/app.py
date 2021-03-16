@@ -153,6 +153,7 @@ def index(start,end):
 @apl.route('/edit/<int:mode>/data/<int:id>/', methods=['GET', 'POST'])
 def edit(mode, id):
     formulir = DateRangeFormulir()
+    data = DateTimeRange()
 
     # mengambil form select
     location_choice = [
