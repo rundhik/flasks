@@ -224,7 +224,7 @@ def edit(mode, id):
             # UX info
             if data.has_crash() == True :
                 for i in data.crash_with():
-                    flash('Jadwal kegiatan berpotensi tabrakan dengan \
+                    flash('Jadwal kegiatan berpotensi bentrok dengan \
                         <a class="badge badge-danger" href="'+ url_for('edit', mode=1, id=i.id) +\
                         '">' + i.description + '</a><br/> Jika ingin memperbaiki jadwal, \
                         klik <a class="badge badge-primary" href="'+ url_for('edit', mode=1, id=data.id) + \
