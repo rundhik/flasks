@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 apl = Flask(__name__, template_folder='../', static_folder='../assets/')
 apl.config['SECRET_KEY'] = 'R4H4514_B4N633DD!@#$'
+apl.config['CSRF_ENABLED'] = True
 apl.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1:3306/flasks?charset=utf8mb4'
 apl.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

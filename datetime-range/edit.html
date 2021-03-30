@@ -77,7 +77,7 @@
                         {% endif %}
                     {% endif %}
                     <form class="col-sm" action="" method="POST">
-                        {{ formulir.csrf }}
+                        {{ formulir.csrf_token }}
                         <div class="col-12">
                             <h6 class="mt-30 mb-20">{{ formulir.description.label }}</h6>
                             {{ formulir.description(class='form-control')}}

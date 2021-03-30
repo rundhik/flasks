@@ -1,4 +1,4 @@
-{% set title = 'Date Time Range' %}
+{% set title = 'Flask RBAC' %}
 
 {% extends 'base.html' %}
 
@@ -61,67 +61,8 @@
             <div class="col-xl-12">
                 <div class="hk-row">
                     <section class="hk-sec-wrapper col-xl-12">
-                        <h5 class="hk-sec-title">Daftar Kegiatan</h5>
-                        <p class="mb-40">
-                            <a href="{{ url_for('edit', mode=0 )}}" class="btn btn-primary btn-wth-icon icon-left btn-sm"><i class="icon-plus"></i> Tambah</a>
-                        </p>
-                        <div class="row">
-                            <div class="col-sm">
-                                <div class="table-wrap">
-                                    <table id="ayas_table" class="table table-striped w-100">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Deskripsi</th>
-                                                <th>Tempat</th>
-                                                <th>Mulai</th>
-                                                <th>Selesai</th>
-                                                <th>Bentrok</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for d in data %}
-                                            <tr>
-                                                <td>{{ loop.index }}</td>
-                                                <td>{{ d.description }}</td>
-                                                <td>{{ d.location }}</td>
-                                                <td>{{ d.start.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
-                                                <td>{{ d.end.strftime('%A, %d/%B/%Y, Jam %H:%M') }}</td>
-                                                <td>
-                                                    {% for i in d.crash_with(start,end) %}
-                                                        {{ i.description }}<br/>
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    <form action="{{ url_for('edit', mode=2, id=d.id)}}" method="POST">
-                                                    {{ formulir.csrf }}
-                                                        <a href="{{ url_for('edit', mode=1, id=d.id) }}" class="btn btn-icon btn-icon-circle btn-light btn-sm btn-style-2" data-toggle="tooltip" data-original-title="Edit">
-                                                            <span class="btn-icon-wrap">
-                                                                <i class="icon-pencil"></i>
-                                                            </span>
-                                                        </a>
-                                                        <button type="submit" class="btn btn-icon btn-icon-circle btn-light btn-sm btn-style-2" name="simpan" data-toggle="tooltip" data-original-title="Hapus"><span class="btn-icon-wrap"><i class="icon-trash"></i></span></button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Deskripsi</th>
-                                                <th>Tempat</th>
-                                                <th>Mulai</th>
-                                                <th>Selesai</th>
-                                                <th>Bentrok</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        <h5 class="hk-sec-title">Flask RBAC</h5>
+                        
                     </section>
                 </div>	
             </div>
