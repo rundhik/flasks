@@ -26,10 +26,55 @@ login_manager.login_view = 'login'
 
 
 #### Models ####
-
-from flask_login import (
-    UserMixin,
+from flask_rbac import (
+    UserMixin, RoleMixin,
 )
+
+# # Define many-to-many relationships
+roles_parents = db.Table(
+    'frbac_roles_parents',
+    db.Column('role_id', db.Integer(), db.ForeignKey('frbac_roles.id')),
+    db.Column('parent_id', db.Integer(), db.ForeignKey('frbac_roles.id')),
+)
+
+class Roles(db.Model, RoleMixin):
+    __tablename__ = 'frbac_roles'
+
+    id = db.Column('id', db.Integer(), primary_key=True)
+    name = db.Column('name', db.String(50))
+    parents = db.relationship(
+        'Roles',
+        secondary=roles_parents,
+        primaryjoin=( id == roles_parents.c.role_id ),
+        secondaryjoin=( id == roles_parents.c.parent_id),
+        backref=db.backref('children', lazy='dynamic')
+    )
+
+    def __init__(self, name):
+        RoleMixin.__init__(self)
+        self.name = name
+
+    def add_parent(self, parent):
+        # # You don't need to add this role to parent's children set,
+        # # relationship between roles would do this work automatically
+        self.parents.append(parent)
+
+    def add_parents(self, *parents):
+        for parent in parents:
+            self.add_parent(parent)
+
+    @staticmethod
+    def get_by_name(name):
+        return Roles.query.filter_by(name=name).first()
+
+
+# # Define many-to-many relationships
+users_roles = db.Table(
+    'frbac_users_roles',
+    db.Column('user_id', db.Integer(), db.ForeignKey('frbac_users.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('frbac_roles.id')),
+)
+
 
 class Users(db.Model, UserMixin):
     __tablename__ = 'frbac_users'
@@ -43,6 +88,35 @@ class Users(db.Model, UserMixin):
 
     def check_password(self, katasandi):
         return bcrypt.check_password_hash(self.password, katasandi)
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return (self.id)
+
+    def add_role(self, role):
+        self.roles.append(role)
+
+    def add_roles(self, roles):
+        for role in roles:
+            self.add_role(role)
+
+    def get_roles(self):
+        for role in self.roles:
+            yield role
+
+    roles = db.relationship(
+        'Roles',
+        secondary=users_roles,
+        backref=db.backref('frbac_roles', lazy='dynamic')
+    )
 
 
 #### Forms ####
@@ -67,25 +141,48 @@ from flask import (
     request, render_template, flash, redirect, url_for, jsonify,
 )
 from flask_login import ( 
-    login_required, login_user, logout_user
+    login_required, login_user, logout_user, current_user,
 )
 
 
 ## Flask-Login Need user_loader first ##
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    return Users.query.get(user_id)
+
+## Now lets flask-rbac recognizing user_loader from flask-login
+rbac.set_user_loader(lambda: current_user)
 
 @apl.route('/login', methods=['GET', 'POST'])
+@rbac.allow(['anonymous'],methods=['GET'])
 def login():
     formulir = LoginFormulir()
+    if formulir.validate_on_submit():
+        data = Users.query.filter_by(username=formulir.username.data).first()
+
+        if data and data.check_password(formulir.password.data):
+            login_user(data)
+            flash('Login berhasil', category='success')
+            return redirect( url_for('index') )
+        elif not data:
+            logout_user()
+            flash('Username tidak ditemukan', category='error')
+        else:
+            logout_user()
+            flash('Password salah', category='error')
+
     return render_template('flask-rbac/login.html', formulir=formulir)
 
-@apl.route('/')
+@apl.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
     return render_template('flask-rbac/index.html')
 
+@apl.route('/logout')
+def logout():
+    formulir = LoginFormulir()
+    logout_user()
+    return redirect( url_for('login') )
 
 
 #### Customizing ####
