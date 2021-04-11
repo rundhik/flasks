@@ -54,6 +54,10 @@ class Roles(db.Model, RoleMixin):
         RoleMixin.__init__(self)
         self.name = name
 
+    def get_name(self):
+        """Return the name of this role"""
+        return self.name
+
     def add_parent(self, parent):
         # # You don't need to add this role to parent's children set,
         # # relationship between roles would do this work automatically
@@ -63,9 +67,22 @@ class Roles(db.Model, RoleMixin):
         for parent in parents:
             self.add_parent(parent)
 
+    def get_children(self):
+        for child in self.children:
+            yield child
+            for grandchild in child.get_children():
+                yield grandchild
+
     @staticmethod
     def get_by_name(name):
         return Roles.query.filter_by(name=name).first()
+
+    @classmethod
+    def get_all(cls):
+        """Return all existing roles
+        """
+        return cls.roles
+
 
 
 # # Define many-to-many relationships
@@ -115,7 +132,7 @@ class Users(db.Model, UserMixin):
     roles = db.relationship(
         'Roles',
         secondary=users_roles,
-        backref=db.backref('frbac_roles', lazy='dynamic')
+        backref=db.backref('roles', lazy='dynamic')
     )
 
 
@@ -139,6 +156,7 @@ class LoginFormulir(Formulir):
 
 from flask import (
     request, render_template, flash, redirect, url_for, jsonify,
+    render_template_string,
 )
 from flask_login import ( 
     login_required, login_user, logout_user, current_user,
@@ -152,6 +170,8 @@ def load_user(user_id):
 
 ## Now lets flask-rbac recognizing user_loader from flask-login
 rbac.set_user_loader(lambda: current_user)
+rbac.set_role_model(Roles)
+rbac.set_user_model(Users)
 
 @apl.route('/login', methods=['GET', 'POST'])
 @rbac.allow(['anonymous'],methods=['GET'])
@@ -177,6 +197,13 @@ def login():
 @login_required
 def index():
     return render_template('flask-rbac/index.html')
+
+@apl.route('/admin', methods=['GET', 'POST'])
+@rbac.allow(['superadmin'], ['GET', 'POST'])
+def admin_page():
+    return render_template_string("""
+    Halaman Admin
+    """)
 
 @apl.route('/logout')
 def logout():
