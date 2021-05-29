@@ -2,7 +2,7 @@ venv/
 konfigurasi.py
 wsgi.py
 .env
-.db
+*.db
 .log
 
 .vscode/
